@@ -13,3 +13,4 @@
 
 # protoc generating files
 *_pb.rb
+*_pb_builder.rb
