@@ -1,6 +1,7 @@
 package main
 
 import (
+    "bytes"
     "io"
     "io/ioutil"
     "log"
@@ -36,12 +37,38 @@ func processReq(req *plugin.CodeGeneratorRequest) *plugin.CodeGeneratorResponse 
         f := files[fname]
         splitted := strings.Split(fname, ".proto")
         out := splitted[0] + "_pb_builder.rb"
+        content := generateBuilders(f)
         resp.File = append(resp.File, &plugin.CodeGeneratorResponse_File{
             Name:    proto.String(out),
-            Content: proto.String(proto.MarshalTextString(f)),
+            Content: proto.String(content),
         })
     }
     return &resp
+}
+
+func generateBuilders(f *descriptor.FileDescriptorProto) string {
+    var buf bytes.Buffer
+
+    for _, m := range f.MessageType {
+        pkgs := strings.Split(strings.Title(f.GetPackage()), ".")
+        io.WriteString(&buf, processMessage(m, &pkgs, &[]string{}))
+    }
+    return buf.String()
+}
+
+func processMessage(m *descriptor.DescriptorProto, packages, msgClasses *[]string) string {
+    var buf bytes.Buffer
+    classes := append(*msgClasses, strings.Title(m.GetName()))
+
+    namespaces := append(*packages, classes...)
+    path := strings.Join(namespaces, "::") + "\n"
+    io.WriteString(&buf, path)
+
+    for _, n := range m.NestedType {
+        io.WriteString(&buf, processMessage(n, packages, &classes))
+    }
+    
+    return buf.String()
 }
 
 func emitResp(resp *plugin.CodeGeneratorResponse) error {
