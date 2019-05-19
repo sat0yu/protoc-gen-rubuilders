@@ -6,7 +6,7 @@ import (
 )
 
 func Indent(width int) string {
-    return strings.Repeat("\t", width)
+    return strings.Repeat("  ", width)
 }
 
 func FileHeader(s string) string {
