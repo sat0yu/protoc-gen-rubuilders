@@ -1,8 +1,9 @@
 # protoc-gen-rubuilders
 Follow the dogma "Only take the elements you need, ignore anything you don't."
 
-`.new` method disallows unknown fields and raises `ArgumentError`.
-It is boring stuff to filter all unknown fields for generating proto objects.
+The protocol buffer compiler [generates ruby codes from `.proto` files with a Ruby plugin.](https://grpc.io/docs/tutorials/basic/ruby/)  
+However, the generated codes look not so good because `.new` method in each message class disallows unknown fields and raises `ArgumentError`.  
+It is such a hassle to filter all unknown fields for generating a serializable object 🤔
 
 ```sh
 irb(main):001:0> load 'example/addressbook_pb.rb'
@@ -18,6 +19,19 @@ Traceback (most recent call last):
         2: from (irb):9:in `new'
         1: from (irb):9:in `initialize'
 ArgumentError (Unknown field name 'unknown_key' in initialization map entry.)
+```
+
+`Rubuilder` provides a factory method `.build` which automatically filters unknown keys. 🏭
+```sh
+irb(main):001:0> load 'example/addressbook_pb.rb'
+=> true
+
+irb(main):002:0> load 'example/addressbook_pb_builder.rb'
+=> true
+
+# `.build` method ignores unknown keys
+irb(main):003:0> Tutorial::Person.build(id: 1, unknown_key: "value")
+=> <Tutorial::Person: name: "", id: 1, email: "", phones: [], last_updated: nil>
 ```
 
 ## Install
